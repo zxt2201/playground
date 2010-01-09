@@ -5,26 +5,26 @@
 <web-app>
   <display-name>Resty - Playground for mixed-mode Scala/Java and JAX-RS</display-name>
 
-   <servlet>
-        <servlet-name>jersey</servlet-name>
-        <servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
+  <servlet>
+    <servlet-name>jersey</servlet-name>
+    <servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
 
-        <init-param>
-          <param-name>com.sun.jersey.config.property.resourceConfigClass</param-name>
-          <param-value>com.sun.jersey.api.core.PackagesResourceConfig</param-value>
-        </init-param>
+    <init-param>
+      <param-name>com.sun.jersey.config.property.resourceConfigClass</param-name>
+      <param-value>com.sun.jersey.api.core.PackagesResourceConfig</param-value>
+    </init-param>
 
-        <init-param>
-          <param-name>com.sun.jersey.config.property.packages</param-name>
-          <param-value>steshaw.resty.resource</param-value>
-        </init-param>
+    <init-param>
+      <param-name>com.sun.jersey.config.property.packages</param-name>
+      <param-value>steshaw.resty</param-value>
+    </init-param>
 
-        <load-on-startup>1</load-on-startup>
-    </servlet>
+    <load-on-startup>1</load-on-startup>
+  </servlet>
 
-    <servlet-mapping>
-        <servlet-name>jersey</servlet-name>
-        <url-pattern>/*</url-pattern>
-    </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>jersey</servlet-name>
+    <url-pattern>/*</url-pattern>
+  </servlet-mapping>
 
 </web-app>
