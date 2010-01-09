@@ -1,4 +1,4 @@
-package steshaw.resty;
+package steshaw.resty.resource;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Produces;

@@ -34,7 +34,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package steshaw.resty;
+package steshaw.resty.resource;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
