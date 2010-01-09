@@ -1,9 +1,12 @@
 
-REST application that currently responds as follows:
+Mixed Scala/Java REST application that responds as follows:
 
-  $ curl http://localhost:8888/resty/hello
+  curl http://localhost:8888/resty/hello
   Hi!
 
   $ curl http://localhost:8888/resty/greeting
   Hi there
+
+  $ curl http://localhost:8888/resty/scala
+  RESTful hello from Scala!
 
