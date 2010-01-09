@@ -1,0 +1,9 @@
+
+REST application that currently responds as follows:
+
+  $ curl http://localhost:8888/resty/hello
+  Hi!
+
+  $ curl http://localhost:8888/resty/greeting
+  Hi there
+
