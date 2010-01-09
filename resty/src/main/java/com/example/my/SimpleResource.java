@@ -10,7 +10,7 @@ public class SimpleResource {
     @GET
     @Produces("text/plain")
     public String getGreeting() {
-        return "Hi there";
+        return "Hi there\n";
     }
 
 }

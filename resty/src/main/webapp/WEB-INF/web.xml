@@ -16,7 +16,7 @@
 
         <init-param>
           <param-name>com.sun.jersey.config.property.packages</param-name>
-          <param-value>com.example.my</param-value>
+          <param-value>com.example.my;steshaw.resty</param-value>
         </init-param>
 
         <load-on-startup>1</load-on-startup>
