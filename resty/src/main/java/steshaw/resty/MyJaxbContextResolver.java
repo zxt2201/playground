@@ -1,6 +1,8 @@
 package steshaw.resty;
 
 import com.sun.jersey.api.json.JSONJAXBContext;
+import steshaw.resty.User;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;

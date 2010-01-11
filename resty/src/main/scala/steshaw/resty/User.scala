@@ -1,6 +1,5 @@
 package steshaw.resty
 
-import scala.reflect.BeanProperty
 import javax.xml.bind.annotation._
 
 @XmlRootElement(name = "user")

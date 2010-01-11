@@ -6,7 +6,7 @@ import javax.ws.rs.Path
 
 @Path("hello")
 class HelloResource {
-    @GET
-    @Produces(Array("text/plain"))
-    def hello() = "Hello from Scala. I changed this back again!\n"
+  @GET
+  @Produces(Array("text/plain"))
+  def hello() = "Hello from Scala! Blah\n"
 }
