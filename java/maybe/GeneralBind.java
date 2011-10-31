@@ -2,25 +2,24 @@
 // Adapted from https://docs.google.com/View?docid=dx5mfkq_17fnd4ss&pli=1
 //   which is linked from http://blog.tmorris.net/strong-type-systems/ by Ricky Clarkson.
 //
+// 1. Changed the signature of bind (which looked a lot like map).
+//
+//      <B> Monad<B> bind(Function<A, B> function)
+//
+// 2. No longer implement Monad in order to have correct signature for bind.
+//
 
 interface Function<A, B> {
   B run(A a);
 }
 
+// No longer used.
 interface Monad<A> {
-  // This original bind method has the wrong signature. It looks more like map.
-//  <B> Monad<B> bind(Function<A, B> function);
-
-  //
-  // Here we try to fix it.
-  //
-  // Should be like this Haskell signature:
-  //   (>>=) :: (Monad m) => m a -> (a -> m b) -> m b
-  //
   <B> Monad<B> bind(Function<A, Monad<B>> function);
 }
 
-interface Maybe<A> extends Monad<A> {
+interface Maybe<A> /*extends Monad<A>*/ {
+  <B> Maybe<B> bind(Function<A, Maybe<B>> function);
 }
 
 final class Just<A> implements Maybe<A> {
@@ -30,21 +29,28 @@ final class Just<A> implements Maybe<A> {
     this.a = a;
   }
 
-  public <B> Monad<B> bind(Function<A, Monad<B>> function) {
+  public <B> Maybe<B> bind(Function<A, Maybe<B>> function) {
     return function.run(a);
   }
 
   @Override public String toString() {
     return "Just " + a.toString();
   }
+
+  static <B> Just<B> just(B b) {
+    return new Just<B>(b);
+  }
 }
 
 final class Nothing<A> implements Maybe<A> {
-  public <B> Monad<B> bind(Function<A, Monad<B>> function) {
-    return new Nothing<B>();
+  public <B> Maybe<B> bind(Function<A, Maybe<B>> function) {
+    return nothing();
   }
   @Override public String toString() {
     return "Nothing";
+  }
+  static <B> Nothing<B> nothing() {
+    return new Nothing<B>();
   }
 }
 
@@ -52,7 +58,7 @@ class Person {
   final String name;
   final int age;
 
-  Person(String name, int age) {
+  Person(final String name, final int age) {
     this.name = name;
     this.age = age;
   }
@@ -61,23 +67,32 @@ class Person {
     return "Person(name = '" + name + "' age = " + age + ")";
   }
 
-  static Person mk(String name, int age) {
+  static Person mk(final String name, final int age) {
     return new Person(name, age);
   }
 }
 
 class GeneralBindDemo {
-  // TODO: bind on maybeAge
-  static Maybe<Person> couldBePerson(Maybe<String> maybeName, Maybe<Integer> maybeAge) {
-    Monad<Person> result = maybeName.bind(new Function<String, Monad<Person>>() {
-      @Override public Maybe<Person> run(String name) {
-        return new Just<Person>(Person.mk(name, 3));
+  static Maybe<Person> couldBePerson(final Maybe<String> maybeName, final Maybe<Integer> maybeAge) {
+    return maybeName.bind(new Function<String, Maybe<Person>>() {
+      @Override public Maybe<Person> run(final String name) {
+        return maybeAge.bind(new Function<Integer, Maybe<Person>>() {
+          @Override public Maybe<Person> run(final Integer age) {
+            return Just.just(Person.mk(name, age));
+          }
+        });
       }
     });
-    return (Maybe<Person>)result;
   }
 
-  public static void main(String[] args) {
-    System.out.println(couldBePerson(new Just<String>("Fred"), new Just<Integer>(25)));
+  static void println(Object msg) {
+    System.out.println(msg.toString());
+  }
+
+  public static void main(final String[] args) {
+    println(couldBePerson(Just.just("Fred"), Just.just(25)));
+    println(couldBePerson(Nothing.<String>nothing(), Just.just(25)));
+    println(couldBePerson(Just.just("Fred"), Nothing.<Integer>nothing()));
+    println(couldBePerson(Nothing.<String>nothing(), Nothing.<Integer>nothing()));
   }
 }

@@ -1,9 +1,5 @@
 //
-// Adapted from the "compilable solution" from the end of the post http://blog.tmorris.net/strong-type-systems/
-//
-// 1. Deleted the unnecessary first argument to bind as it was the same as the implicit receiver.
-// 2. No longer implement Monad as it's not possible to have the correct type for bind (I guess
-//    that's the point of the post).
+// Another approach to implementing Maybe.
 //
 
 interface F<X, Y> {
@@ -15,51 +11,40 @@ interface Monad<A> {
   <B> Monad<B> bind(F<A, Monad<B>> f);
 }
 
-final class Maybe<A> /*implements Monad<A>*/ {
-  public <B> Maybe<B> bind(final F<A, Maybe<B>> f) {
-    final A a = just();
-    if (isNothing()) {
+// Maybe utilties - just bind for now
+abstract class MaybeU {
+  public static <A, B> Maybe<B> bind(final Maybe<A> a, final F<A, Maybe<B>> f) {
+    if (a.isNothing()) {
       return Maybe.<B>nothing();
     } else {
-      return f.f(a);
+      return f.f(a.just());
     }
   }
+}
 
-  // Let's just hack for now.
-  // null denotes 'Nothing'.
-  // Many programmers will be familiar
-  // with this idiom (did I say hack?)
-  // anyway.
-  //
-  // A more complete solution is provided at
-  // http://blog.tmorris.net/revisiting-maybe-in-java
-  private final A a;
+abstract class Maybe<A> {
+  private Maybe() {}
 
-  public Maybe() {
-    this.a = null;
-  }
-
-  public Maybe(final A a) {
-    this.a = a;
-  }
-
-  public A just() {
-    return a;
-  }
-
-  public boolean isNothing() {
-    return a == null;
-  }
-
-  @Override public String toString() {
-    return isNothing()? "Nothing" : "Just " + a.toString();
-  }
+  abstract boolean isJust();
+  abstract boolean isNothing();
+  abstract A just();
 
   static <A> Maybe<A> just(final A a) {
-    return new Maybe<A>(a);
+    return new Maybe<A>() {
+      boolean isJust() { return true; }
+      boolean isNothing() { return false; }
+      A just() {return a; }
+      @Override public String toString() { return "Just " + a; }
+    };
   }
+
   static <A> Maybe<A> nothing() {
-    return new Maybe<A>();
+    return new Maybe<A>() {
+      boolean isJust() { return false; }
+      boolean isNothing() { return true; }
+      A just() {throw new IllegalStateException("cannot just on a Nothing"); }
+      @Override public String toString() { return "Nothing"; }
+    };
   }
 }
 
@@ -81,11 +66,11 @@ class Person {
   }
 }
 
-class Demo {
+class AnotherApproachDemo {
   static Maybe<Person> couldBePerson(final Maybe<String> maybeName, final Maybe<Integer> maybeAge) {
-    return maybeName.bind(new F<String, Maybe<Person>>() {
+    return MaybeU.bind(maybeName, new F<String, Maybe<Person>>() {
       @Override public Maybe<Person> f(final String name) {
-        return maybeAge.bind(new F<Integer, Maybe<Person>>() {
+        return MaybeU.bind(maybeAge, new F<Integer, Maybe<Person>>() {
           @Override public Maybe<Person> f(final Integer age) {
             return Maybe.just(Person.mk(name, age));
           }
