@@ -1,5 +1,5 @@
 --
--- Hacked by Steven Shaw to accept filename as arg.
+-- Modified by Steven Shaw.
 --
 
 -- Main module for Imp parser and interpreter.
@@ -8,20 +8,20 @@
 
 module Main (main) where
 
-import IO
 import Scanner
 import Parser
 import Interpreter
 import System (getArgs)
 import Control.Monad (forM_)
-import Control.Arrow ((>>>), (&&&))
+import Control.Arrow ((&&&))
+import Text.Printf
 
 printTokens :: [Token] -> IO ()
 printTokens tokens = do
   putStrLn "scanner: "
-  putStr "  "; print tokens
-  (map (id &&& unscan) tokens) `forM_` \(token, unscan) -> do
-    putStr "  "; putStr unscan; putStr "\t\t\t"; print token
+  print tokens
+  map (id &&& unscan) tokens `forM_` \(token, unscanned) ->
+    printf "  %-30s %-30s\n" unscanned (show token)
 
 main :: IO ()
 main = do
@@ -29,5 +29,6 @@ main = do
   input <- readFile filename
   let tokens = scan input
   printTokens tokens
-  let result = eC (parse tokens) arid
+  let result = eval (parse tokens) initEnv
+  putStrLn "eval ==>"
   putStr (show result)

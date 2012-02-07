@@ -1,3 +1,7 @@
+--
+-- Modified by Steven Shaw.
+--
+
 -- Interpreter for Imp, based on evaluation semantics
 -- Developed for use in COMP3610
 -- Clem Baker-Finch
@@ -30,88 +34,89 @@ update s x n = \y -> if x==y then n else s y
 -- list manipulation is easier, but I want a new type which can be an
 -- instance of Show.
 
-newtype State = State [(Name, Int)]
+newtype Env = Env [(Name, Int)]
 
-apply :: State -> Name -> Int
+apply :: Env -> Name -> Int
 
-apply (State fm) x =
+apply (Env fm) x =
     case lookup x fm of
     Just n  -> n
     Nothing -> error ("Undeclared identifier: " ++ show x)
 
-update :: State -> Name -> Int -> State
+update :: Env -> Name -> Int -> Env
 
-update (State fm) x n =
-    State (listUpdate fm x n)
+update (Env fm) x n =
+    Env (listUpdate fm x n)
 	where listUpdate [] x n = [(x,n)]
 	      listUpdate ((y,n'):ps) x n
-		  | x==y        = ((x,n):ps)
-		  | otherwise   = ((y,n'): listUpdate ps x n)
+		  | x == y      = (x,n)  : ps
+		  | otherwise   = (y,n') : listUpdate ps x n
 
-instance Show State where
-    showsPrec _ (State []) s = s
-    showsPrec i (State ((x,n):ps)) s
-	= concat [ show x, "\t->  ", show n, "\n", showsPrec i (State ps) s]
+instance Show Env where
+    show (Env bindings) = "environment = {\n" ++ concat middle ++ "}\n"
+      where
+        middle = map fred bindings
+        fred (var, value) = "  " ++ var ++ " = " ++ show value ++ "\n"
 
-arid :: State
-arid = State []
+initEnv :: Env
+initEnv = Env []
 
 -- Arithmetic expressions:
 
-eA :: Aexp -> State -> Int
+evalA :: Aexp -> Env -> Int
 
-eA (Num n) s      = n
-eA (Var x) s      = apply s x
-eA (a0 :+: a1) s  = n0 + n1
-    where n0 = eA a0 s
-          n1 = eA a1 s
-eA (a0 :-: a1) s  = n0 - n1
-    where n0 = eA a0 s
-          n1 = eA a1 s
-eA (a0 :*: a1) s  = n0 * n1
-    where n0 = eA a0 s
-          n1 = eA a1 s
+evalA (Num n) env      = n
+evalA (Var x) env      = apply env x
+evalA (a0 :+: a1) env  = n0 + n1
+    where n0 = evalA a0 env
+          n1 = evalA a1 env
+evalA (a0 :-: a1) env  = n0 - n1
+    where n0 = evalA a0 env
+          n1 = evalA a1 env
+evalA (a0 :*: a1) env  = n0 * n1
+    where n0 = evalA a0 env
+          n1 = evalA a1 env
 
 -- Boolean expressions:
 
-eB :: Bexp -> State -> Bool
+evalB :: Bexp -> Env -> Bool
 
-eB TrueLit s        = True
-eB FalseLit s       = False
-eB (a0 :=: a1) s    = n0 == n1
-    where n0 = eA a0 s
-          n1 = eA a1 s
-eB (a0 :<=: a1) s   = n0 <= n1
-    where n0 = eA a0 s
-          n1 = eA a1 s
-eB (Not b) s = not t
-    where t = eB b s
-eB (b0 `And` b1) s  = t0 && t1
-    where t0 = eB b0 s
-          t1 = eB b1 s
-eB (b0 `Or` b1) s   = t0 || t1
-    where t0 = eB b0 s
-          t1 = eB b1 s
+evalB TrueLit env        = True
+evalB FalseLit env       = False
+evalB (a0 :=: a1) env    = n0 == n1
+    where n0 = evalA a0 env
+          n1 = evalA a1 env
+evalB (a0 :<=: a1) env   = n0 <= n1
+    where n0 = evalA a0 env
+          n1 = evalA a1 env
+evalB (Not b) env = not t
+    where t = evalB b env
+evalB (b0 `And` b1) env  = t0 && t1
+    where t0 = evalB b0 env
+          t1 = evalB b1 env
+evalB (b0 `Or` b1) env   = t0 || t1
+    where t0 = evalB b0 env
+          t1 = evalB b1 env
 
 -- Commands:
 
-eC :: Com -> State -> State
+eval :: Com -> Env -> Env
 
-eC (x := a) s     = update s x n
-    where n = eA a s
-eC Skip s         = s
-eC (c0 :~: c1) s  = s''
-    where s'  = eC c0 s
-          s'' = eC c1 s'
-eC (If b c0 c1) s
+eval (x := a) env     = update env x n
+    where n = evalA a env
+eval Skip env         = env
+eval (c0 :~: c1) env  = env''
+    where env'  = eval c0 env
+          env'' = eval c1 env'
+eval (If b c0 c1) env
     | t           = s0
     | otherwise   = s1
-    where t  = eB b s
-          s0 = eC c0 s
-          s1 = eC c1 s
-eC (While b c) s
-    | t           = s''
-    | otherwise   = s
-    where t   = eB b s
-	  s'  = eC c s
-          s'' = eC (While b c) s'
+    where t  = evalB b env
+          s0 = eval c0 env
+          s1 = eval c1 env
+eval (While b c) env
+    | t           = env''
+    | otherwise   = env
+    where t     = evalB b env
+	  env'  = eval c env
+          env'' = eval (While b c) env'
