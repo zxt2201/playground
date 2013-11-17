@@ -14,6 +14,7 @@
 -- | MiniTriangle Abstract Syntax Tree. Representation of MiniTriangle programs
 -- after parsing but prior to type-checking.
 
+
 module AST (
     AST (..),		-- Not abstract. Instances: HasSrcPos.
     Command (..),	-- Not abstract. Instances: HasSrcPos.
